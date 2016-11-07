@@ -9,13 +9,12 @@ library(cowplot)
 csvpath='/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10_1-8/fw/'
 files <- list.files(path=csvpath, pattern="*.csv", full.names=T, recursive=FALSE)
 
-gg_list <- list()
-outfilename <- csvpath
+plots <- list()
+fwoutfilename <- csvpath
 for (filepath in files){
   #filepath='/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10_1-8/mel_21_7_2wpi.csv'
   filename<-basename(filepath)
   filename_split<-unlist(strsplit(file_path_sans_ext(filename), "_"))
-  #tobeplotted <- c(tobeplotted, c=file_path_sans_ext(filename))
   graphcolor="gray50"
   
   if (filename_split[1] == "cuc") {plant="cucumber"; graphcolor="olivedrab4"
@@ -24,7 +23,7 @@ for (filepath in files){
   } else if (filename_split[1] == "tom") {plant="tomato"; graphcolor="red"
   }
   
-  outfilename <- paste(outfilename,plant,sep="_")
+  fwoutfilename <- paste(fwoutfilename,plant,sep="_")
   fw_title=paste("Average fresh weight of",plant,"plants")
   fw_subtitle=paste(filename_split[2]," C; 10^", filename_split[3], " sp/ml; ", filename_split[4], sep="")
   print(fw_title)
@@ -65,12 +64,12 @@ for (filepath in files){
   plot.levels.by_treatment$sem=stats$sem
   plot.levels.by_significance <- plot.levels.by_treatment[order(plot.levels[,2], plot.levels[,1]), ]                         
   
-  gg_list[[plant]] <- ggplot(stats, aes(x = treatment, y = mean)) +
+  plots[[plant]] <- ggplot(stats, aes(x = treatment, y = mean)) +
     geom_bar(position=position_dodge(), stat="identity", fill=graphcolor, colour="black", size=1, width=.8) + 
     geom_errorbar(aes(ymin=mean-sem, ymax=mean+sem), width=.2,  size=.8, position=position_dodge(.9), colour="black") +
     ylab("Fresh weight (g)") +
     xlab(NULL)+
-    scale_y_continuous(limits=c(0,max(stats$cumulativelen)+.2*max(stats$cumulativelen)), expand=c(0, 0), breaks = seq(0,longest_element_w_sembar+.2*longest_element_w_sembar, y_major_break_labels), minor_breaks = seq(0,longest_element_w_sembar+.2*longest_element_w_sembar, y_minor_break_labels)) +
+    scale_y_continuous(limits=c(0,max(stats$cumulativelen)+.2*max(stats$cumulativelen)), expand=c(0, 0), breaks=seq(0,longest_element_w_sembar+.2*longest_element_w_sembar, 1), minor_breaks = seq(0,longest_element_w_sembar+.2*longest_element_w_sembar, y_minor_break_labels)) +
     ggtitle(bquote(atop(.(fw_title), atop(.(fw_subtitle), "")))) + 
     #add significance labels:
     geom_text(aes(label=plot.levels.by_treatment[,2]), y=stats$cumulativelen+.05*longest_element_w_sembar,  size=rel(6)) +
@@ -82,23 +81,22 @@ for (filepath in files){
     theme(axis.ticks.x=element_blank())+
     theme(panel.grid.major.x = element_blank())+
     theme(panel.grid.minor.x = element_blank()) +
-    theme(panel.grid.major.y = element_line(colour="gray60", size=0.5)) +
+    theme(panel.grid.major.y = element_line(colour="black", size=1)) +
     theme(panel.grid.minor.y = element_line(colour="gray87", size=0.5)) +
     theme(panel.background = element_rect(fill="gray96")) +
     theme(plot.margin = unit(c(0.5,0.5,0.5,1.5), "cm"))
   ggsave(paste(file_path_sans_ext(filepath),".png",sep=""), width=30, height=30, units="cm",dpi=300)
 }
 
-outfilename <- paste(outfilename,"png",sep=".")
+fwoutfilename <- paste(fwoutfilename,"png",sep=".")
 
-notitlestheme <- theme(axis.title.y = element_blank(), axis.text.x=element_blank(), plot.title=element_blank())
-gg_list[[1]] <- gg_list[[1]] + notitlestheme
-gg_list[[2]] <- gg_list[[2]] + notitlestheme
-gg_list[[3]] <- gg_list[[3]] + notitlestheme
+notitlestheme <- theme(axis.title.y = element_blank(), axis.text.x=element_blank(), plot.title=element_blank(), plot.margin = unit(c(0.25,0.25,0.25,0.75), "cm"))
+plots[[1]] <- plots[[1]] + notitlestheme
+plots[[2]] <- plots[[2]] + notitlestheme
+plots[[3]] <- plots[[3]] + notitlestheme
 
-ggdraw() +
-  draw_plot(gg_list[[1]], 0, 0, .33, 1) +
-  draw_plot(gg_list[[2]], .333, 0, .33, 1) +
-  draw_plot(gg_list[[3]], .666, 0, .33, 1) +
-  draw_plot_label(c("A", "B", "C"), c(0, .333, .666), c(1, 1, 1), size = 15)
-ggsave(outfilename, width=60, height=20, units="cm",dpi=300)
+#http://www.sthda.com/english/wiki/ggplot2-easy-way-to-mix-multiple-graphs-on-the-same-page-r-software-and-data-visualization
+png(filename=fwoutfilename, width=60, height=20, units="cm",res=300)
+#grid.arrange(plots[[1]],plots[[2]],plots[[3]], ncol=3, nrow=1)
+plot_grid(plots[[1]],plots[[2]],plots[[3]], align="h", ncol = 3)
+dev.off()

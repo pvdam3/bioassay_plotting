@@ -3,8 +3,15 @@ library(reshape2)
 library(multcompView)
 library(plyr)
 library(tools)
+library(gridExtra)
+library(cowplot)
 
-files <- list.files(path="/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10_1-8/di", pattern="*.csv", full.names=T, recursive=FALSE)
+csvpath='/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10_1-8/di/'
+files <- list.files(path=csvpath, pattern="*.csv", full.names=T, recursive=FALSE)
+
+plots <- list()
+dioutfilename <- csvpath
+
 for (filepath in files){
   #filepath='/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10_1-8/di/cuc_21_7_2wpi.csv'
   filename<-basename(filepath)
@@ -17,6 +24,7 @@ for (filepath in files){
   } else if (filename_split[1] == "tom") {plant="tomato"; graphcolor="red"
   }
   
+  dioutfilename <- paste(dioutfilename,plant,sep="_")
   title=paste("Disease indexes of",plant,"plants")
   subtitle=paste(filename_split[2]," C; 10^", filename_split[3], " sp/ml; ", filename_split[4], sep="")
 
@@ -38,8 +46,8 @@ for (filepath in files){
   melted_stats <- melt(stats)
   di_colors <- c("DI0" = "#dbefd9","DI1" = "#f3f0ba","DI2" = "#e58735", "DI3" = "#bd0913", "DI4" = "gray10")
   
-  ggplot(melted_stats, aes(x=treatment, y=value, fill=variable)) +
-    geom_bar(stat = "identity",colour="black", size=.5, width=.8) +
+  plots[[plant]] <- ggplot(melted_stats, aes(x=treatment, y=value, fill=variable)) +
+    geom_bar(stat = "identity",colour="black", size=1, width=.8) +
     scale_fill_manual(values=di_colors, name="") +
     ylab("number of plants") +
     xlab(NULL)+
@@ -61,3 +69,14 @@ for (filepath in files){
     theme(plot.margin = unit(c(0.5,0.5,0.5,1.5), "cm"))
   ggsave(paste(file_path_sans_ext(filepath),".png",sep=""), width=30, height=30, units="cm",dpi=300)
 }
+
+dioutfilename <- paste(dioutfilename,"png",sep=".")
+
+notitlestheme <- theme(axis.title.y = element_blank(), axis.text.x=element_blank(), plot.title=element_blank(), legend.text=element_blank(), legend.position="none", plot.margin = unit(c(0.25,0.25,0.25,0.75), "cm"))
+plots[[1]] <- plots[[1]] + notitlestheme
+plots[[2]] <- plots[[2]] + notitlestheme
+plots[[3]] <- plots[[3]] + notitlestheme
+
+png(filename=dioutfilename, width=60, height=20, units="cm",res=300)
+grid.arrange(plots[[1]],plots[[2]],plots[[3]], ncol=3, nrow=1)
+dev.off()
