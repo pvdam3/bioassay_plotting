@@ -164,8 +164,6 @@ notitlestheme <- theme(axis.title.y = element_blank(), axis.text.x=element_blank
   theme(plot.title=element_blank(), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))+
   theme(legend.text=element_blank(), legend.position="none")
  
-  
-
 
 
 plots[[1]] <- plots[[1]] + notitlestheme + background_grid(major = "xy", minor = "none")+geom_text(aes(label=plot.levels.multiplot[[1]][[2]]), y=plot.levels.multiplot[[1]][[4]],size=rel(8))
@@ -175,7 +173,15 @@ plots[[4]] <- plots[[4]] + notitlestheme
 plots[[5]] <- plots[[5]] + notitlestheme
 plots[[6]] <- plots[[6]] + notitlestheme
 
+labels <- ggplot(melted_stats, aes(x=treatment, fill=variable)) +
+  xlab(NULL)+
+  scale_x_discrete(limits=plot.levels.multiplot[[1]][[1]])+
+  theme(axis.text.x = element_text(angle=45, hjust=1,vjust=.9, size = rel(1.8), colour = "black"))+
+  theme(axis.line.x=element_blank(), axis.ticks.x=element_blank())
+
+dilegend <- get_legend(plots[[4]] + theme(legend.position="bottom", legend.text=element_text(size=rel(1.8))) + element_rect(size = 10))
+
 png(filename=outfilename, width=60, height=40, units="cm",res=300)
-#grid.arrange(plots[[1]],plots[[2]],plots[[3]],plots[[4]],plots[[5]],plots[[6]],nrow=2,ncol=3)
-plot_grid(plots[[1]],plots[[2]],plots[[3]],plots[[4]],plots[[5]],plots[[6]], align="v", nrow=2,ncol=3)
+sixplots <-plot_grid(plots[[1]],plots[[2]],plots[[3]],plots[[4]],plots[[5]],plots[[6]],labels, labels, labels, align="v", nrow=3,ncol=3, rel_heights = c(1, 1, .15))
+plot_grid(sixplots, dilegend, nrow=2,ncol=1, rel_heights = c(1, .1), scale = 0.95)
 dev.off()
