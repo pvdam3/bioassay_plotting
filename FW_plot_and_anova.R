@@ -69,7 +69,7 @@ for (filepath in files){
     geom_errorbar(aes(ymin=mean-sem, ymax=mean+sem), width=.2,  size=.8, position=position_dodge(.9), colour="black") +
     ylab("Fresh weight (g)") +
     xlab(NULL)+
-    scale_y_continuous(limits=c(0,max(stats$cumulativelen)+.2*max(stats$cumulativelen)), expand=c(0, 0), breaks=seq(0,longest_element_w_sembar+.2*longest_element_w_sembar, 1), minor_breaks = seq(0,longest_element_w_sembar+.2*longest_element_w_sembar, y_minor_break_labels)) +
+    scale_y_continuous(limits=c(0,max(stats$cumulativelen)+.2*max(stats$cumulativelen)), expand=c(0, 0), breaks=seq(0,longest_element_w_sembar+.2*longest_element_w_sembar, y_major_break_labels), minor_breaks = seq(0,longest_element_w_sembar+.2*longest_element_w_sembar, y_minor_break_labels)) +
     ggtitle(bquote(atop(.(fw_title), atop(.(fw_subtitle), "")))) + 
     #add significance labels:
     geom_text(aes(label=plot.levels.by_treatment[,2]), y=stats$cumulativelen+.05*longest_element_w_sembar,  size=rel(6)) +
@@ -81,7 +81,7 @@ for (filepath in files){
     theme(axis.ticks.x=element_blank())+
     theme(panel.grid.major.x = element_blank())+
     theme(panel.grid.minor.x = element_blank()) +
-    theme(panel.grid.major.y = element_line(colour="black", size=1)) +
+    theme(panel.grid.major.y = element_line(colour="gray70", size=.5)) +
     theme(panel.grid.minor.y = element_line(colour="gray87", size=0.5)) +
     theme(panel.background = element_rect(fill="gray96")) +
     theme(plot.margin = unit(c(0.5,0.5,0.5,1.5), "cm"))
@@ -96,7 +96,7 @@ plots[[2]] <- plots[[2]] + notitlestheme
 plots[[3]] <- plots[[3]] + notitlestheme
 
 #http://www.sthda.com/english/wiki/ggplot2-easy-way-to-mix-multiple-graphs-on-the-same-page-r-software-and-data-visualization
-png(filename=fwoutfilename, width=60, height=20, units="cm",res=300)
-#grid.arrange(plots[[1]],plots[[2]],plots[[3]], ncol=3, nrow=1)
-plot_grid(plots[[1]],plots[[2]],plots[[3]], align="h", ncol = 3)
-dev.off()
+#png(filename=fwoutfilename, width=60, height=20, units="cm",res=300)
+grid.arrange(plots[[1]],plots[[2]],plots[[3]], ncol=3, nrow=1)
+#plot_grid(plots[[1]],plots[[2]],plots[[3]], align="h", ncol = 3)
+#dev.off()

@@ -61,7 +61,7 @@ for (filepath in files){
     theme(axis.ticks.x=element_blank())+
     theme(panel.grid.major.x = element_blank()) +
     theme(panel.grid.minor.x = element_blank()) +
-    theme(panel.grid.major.y = element_line(colour="gray60", size=0.5)) +
+    theme(panel.grid.major.y = element_line(colour="gray70", size=0.5)) +
     theme(panel.grid.minor.y = element_blank()) +
     theme(panel.background = element_rect(fill="gray96")) +
     theme(legend.text = element_text(size=rel(1.5))) +

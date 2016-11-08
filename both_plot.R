@@ -6,13 +6,14 @@ library(tools)
 library(gridExtra)
 library(cowplot)
 
-fwcsvpath='/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10_1-8/fw/'
+maindirectory<-"/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10-HCT/"
+fwcsvpath=paste(maindirectory, "/fw/", sep="")
 fwfiles <- list.files(path=fwcsvpath, pattern="*.csv", full.names=T, recursive=FALSE)
-dicsvpath='/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10_1-8/di/'
+dicsvpath=paste(maindirectory, "/di/", sep="")
 difiles <- list.files(path=dicsvpath, pattern="*.csv", full.names=T, recursive=FALSE)
 
 plots <- list()
-outfilename <- '/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10_1-8/'
+outfilename <- maindirectory
 
 for (filepath in fwfiles){
   #filepath='/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10_1-8/mel_21_7_2wpi.csv'
@@ -47,11 +48,11 @@ for (filepath in fwfiles){
   stats$cumulativelen=stats$mean+stats$sem
   longest_element_w_sembar=max(stats$cumulativelen)
   
-  y_major_break_labels=1
-  if (longest_element_w_sembar>10){y_major_break_labels=5; y_minor_break_labels=1
-  } else if (longest_element_w_sembar>4){y_major_break_labels=1; y_minor_break_labels=.5
-  } else{y_major_break_labels=1; y_minor_break_labels=.5
-  }
+  y_major_break_labels=2; y_minor_break_labels=.5
+  #if (longest_element_w_sembar>10){y_major_break_labels=5; y_minor_break_labels=1
+  #} else if (longest_element_w_sembar>4){y_major_break_labels=1; y_minor_break_labels=.5
+  #} else{y_major_break_labels=1; y_minor_break_labels=.5
+  #}
   
   melteddata <- melt(data, na.rm = FALSE, value.name="freshweight", variable.name="treatment")
   aov_out<-aov(freshweight ~ treatment, data=melteddata)
@@ -72,10 +73,10 @@ for (filepath in fwfiles){
     geom_errorbar(aes(ymin=mean-sem, ymax=mean+sem), width=.2,  size=.8, position=position_dodge(.9), colour="black") +
     ylab("Fresh weight (g)") +
     xlab(NULL)+
-    scale_y_continuous(limits=c(0,max(stats$cumulativelen)+.2*max(stats$cumulativelen)), expand=c(0, 0), breaks = seq(0,longest_element_w_sembar+.2*longest_element_w_sembar, y_major_break_labels), minor_breaks = seq(0,longest_element_w_sembar+.2*longest_element_w_sembar, y_minor_break_labels)) +
+    scale_y_continuous(limits=c(0,max(stats$cumulativelen)+.1*max(stats$cumulativelen)), expand=c(0, 0), breaks = seq(0,longest_element_w_sembar+.2*longest_element_w_sembar, y_major_break_labels), minor_breaks = seq(0,longest_element_w_sembar+.2*longest_element_w_sembar, y_minor_break_labels)) +
     ggtitle(bquote(atop(.(fw_title), atop(.(fw_subtitle), "")))) + 
     #add significance labels:
-    geom_text(aes(label=plot.levels.by_treatment[,2]), y=stats$cumulativelen+.05*longest_element_w_sembar,  size=rel(6)) +
+    geom_text(aes(label=plot.levels.by_treatment[,2]), y=stats$cumulativelen+.05*longest_element_w_sembar,  size=rel(8)) +
     theme(axis.text.x = element_text(angle=45, hjust=1, size = rel(1.8), colour = "black")) +
     theme(axis.text.y = element_text(size = rel(1.8), colour = "black")) +
     theme(axis.title.x = element_text(angle=0, size = rel(1.8), colour = "black")) +
@@ -84,10 +85,11 @@ for (filepath in fwfiles){
     theme(axis.ticks.x=element_blank())+
     theme(panel.grid.major.x = element_blank())+
     theme(panel.grid.minor.x = element_blank()) +
-    theme(panel.grid.major.y = element_line(color="black", size=0.5)) +
+    theme(panel.grid.major.y = element_line(color="gray70", size=0.5)) +
     theme(panel.grid.minor.y = element_line(colour="gray87", size=0.5)) +
     theme(panel.background = element_rect(fill="gray96")) +
-    theme(plot.margin = unit(c(0.5,0.5,0.5,1.5), "cm"))
+    theme(plot.margin = unit(c(0.5,0.5,0.5,1.5), "cm")) +
+    background_grid(major = "y", minor = "y")
   ggsave(paste(file_path_sans_ext(filepath),".png",sep=""), width=30, height=30, units="cm",dpi=300)
 }
 
@@ -141,12 +143,13 @@ for (filepath in difiles){
     theme(axis.ticks.x=element_blank())+
     theme(panel.grid.major.x = element_blank()) +
     theme(panel.grid.minor.x = element_blank()) +
-    theme(panel.grid.major.y = element_line(colour="gray60", size=0.5)) +
+    theme(panel.grid.major.y = element_line(colour="gray70", size=0.5)) +
     theme(panel.grid.minor.y = element_blank()) +
     theme(panel.background = element_rect(fill="gray96")) +
     theme(legend.text = element_text(size=rel(1.5))) +
     theme(legend.position="top") +
     theme(plot.margin = unit(c(0.5,0.5,0.5,1.5), "cm"))
+    background_grid(major = "y", minor = "none")
   ggsave(paste(file_path_sans_ext(filepath),".png",sep=""), width=30, height=30, units="cm",dpi=300)
 }
 
@@ -154,7 +157,8 @@ outfilename <- paste(outfilename,"png",sep=".")
 
 notitlestheme <- theme(axis.title.y = element_blank(), axis.text.x=element_blank())+
   theme(plot.title=element_blank(), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))+
-  theme(legend.text=element_blank(), legend.position="none")
+  theme(legend.text=element_blank(), legend.position="none")+
+  background_grid(major = "y", minor = "none")
 
 plots[[1]] <- plots[[1]] + notitlestheme
 plots[[2]] <- plots[[2]] + notitlestheme
@@ -164,6 +168,6 @@ plots[[5]] <- plots[[5]] + notitlestheme
 plots[[6]] <- plots[[6]] + notitlestheme
 
 png(filename=outfilename, width=60, height=40, units="cm",res=300)
-#grid.arrange(plots[[1]],plots[[2]],plots[[3]], ncol=3, nrow=1)
+#grid.arrange(plots[[1]],plots[[2]],plots[[3]],plots[[4]],plots[[5]],plots[[6]],nrow=2,ncol=3)
 plot_grid(plots[[1]],plots[[2]],plots[[3]],plots[[4]],plots[[5]],plots[[6]], align="v", nrow=2,ncol=3)
 dev.off()
