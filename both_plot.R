@@ -8,8 +8,10 @@ library(cowplot)
 library(gdata)
 library(dplyr)
 
-# should contain fw/ di/ and (not obliged) labels.csv
-maindirectory<-"/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10-HCT/"
+#### should contain fw/ di/ and (not obliged) labels.csv
+maindirectory<-"/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10-KOs/"
+####
+
 fwcsvpath=paste(maindirectory, "/fw/", sep="")
 fwfiles <- list.files(path=fwcsvpath, pattern="*.csv", full.names=T, recursive=FALSE)
 dicsvpath=paste(maindirectory, "/di/", sep="")
@@ -152,7 +154,8 @@ for (filepath in difiles){
   #melteddidata$V1 <- factor(melteddidata$V1, as.character(unique(mydidata$V1))) 
   melted_distats <- melt(distats)
   melted_distats$treatment <- factor(melted_distats$treatment, as.character(unique(mydidata$V1)))
-  di_colors <- c("DI0" = "#dbefd9","DI1" = "#f3f0ba","DI2" = "#e58735", "DI3" = "#bd0913", "DI4" = "gray10")
+ #di_colors <- c("DI0" = "#dbefd9","DI1" = "#f3f0ba","DI2" = "#e58735", "DI3" = "#bd0913", "DI4" = "gray10")
+  di_colors <- c("DI0" = "#abc370","DI1" = "#a59a6a","DI2" = "#f8a65f", "DI3" = "#be1c14", "DI4" = "gray10")
   
   plots[[paste(plant,"di",sep = "")]] <- ggplot(melted_distats, aes(x=treatment, y=value, fill=variable)) +
     geom_bar(stat = "identity",colour="black", size=1, width=.8) +
@@ -182,23 +185,26 @@ for (filepath in difiles){
 
 outfilename <- paste(outfilename,"png",sep=".")
 
-notitlestheme <- theme(axis.title.y = element_blank(), axis.text.x=element_blank())+
+notitlestheme <- theme(axis.title.y = element_blank(), axis.text.x=element_blank())+background_grid(major = "xy", minor = "none")+
   theme(plot.title=element_blank(), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))+
   theme(legend.text=element_blank(), legend.position="none")
  
-
-
-plots[[1]] <- plots[[1]] + notitlestheme + background_grid(major = "xy", minor = "none")+geom_text(aes(label=plot.levels.multiplot[[1]][[2]]), y=plot.levels.multiplot[[1]][[4]],size=rel(8))
-plots[[2]] <- plots[[2]] + notitlestheme + background_grid(major = "xy", minor = "none")+geom_text(aes(label=plot.levels.multiplot[[2]][[2]]), y=plot.levels.multiplot[[2]][[4]],size=rel(8))
-plots[[3]] <- plots[[3]] + notitlestheme + background_grid(major = "xy", minor = "none")+geom_text(aes(label=plot.levels.multiplot[[3]][[2]]), y=plot.levels.multiplot[[3]][[4]],size=rel(8))
-plots[[4]] <- plots[[4]] + notitlestheme + background_grid(major = "xy", minor = "none")
-plots[[5]] <- plots[[5]] + notitlestheme + background_grid(major = "xy", minor = "none")
-plots[[6]] <- plots[[6]] + notitlestheme + background_grid(major = "xy", minor = "none")
+plots[[1]] <- plots[[1]] + notitlestheme +geom_text(aes(label=plot.levels.multiplot[[1]][[2]]), y=plot.levels.multiplot[[1]][[4]],size=rel(8))
+plots[[2]] <- plots[[2]] + notitlestheme +geom_text(aes(label=plot.levels.multiplot[[2]][[2]]), y=plot.levels.multiplot[[2]][[4]],size=rel(8))
+plots[[3]] <- plots[[3]] + notitlestheme +geom_text(aes(label=plot.levels.multiplot[[3]][[2]]), y=plot.levels.multiplot[[3]][[4]],size=rel(8))
+plots[[4]] <- plots[[4]] + notitlestheme 
+plots[[5]] <- plots[[5]] + notitlestheme
+plots[[6]] <- plots[[6]] + notitlestheme
 
 labels <- ggplot(melted_distats, aes(x=treatment, fill=variable)) +
   xlab(NULL)+
   theme(axis.text.x = element_text(angle=45, hjust=1,vjust=.8, size = rel(1.8), colour = "black"))+
   theme(axis.line.x=element_blank(), axis.ticks.x=element_blank())
+
+ylabelA <- ggplot(melted_distats, aes(y=value, fill=variable))+ylab(label="fresh weight (g)")+
+  theme(axis.line.y=element_blank(), axis.ticks.y=element_blank(), axis.text=element_blank(), axis.title.y=element_text(size=rel(1.8)))
+ylabelB <- ggplot(stats, aes(y = mean))+ylab(label="number of plants")+
+  theme(axis.line.y=element_blank(), axis.ticks.y=element_blank(), axis.text=element_blank(), axis.title.y=element_text(size=rel(1.8)))
 
 if (file.exists(paste(maindirectory,"labels.csv",sep=""))){
   customlabels <- read.csv(paste(maindirectory,"labels.csv",sep=""), header=FALSE)
@@ -208,7 +214,11 @@ if (file.exists(paste(maindirectory,"labels.csv",sep=""))){
 
 dilegend <- get_legend(plots[[4]] + theme(legend.position="bottom", legend.text=element_text(size=rel(1.8))))
 
-png(filename=outfilename, width=60, height=45, units="cm",res=300)
-sixplots <-plot_grid(plots[[1]],plots[[2]],plots[[3]],plots[[4]],plots[[5]],plots[[6]],labels, labels, labels, align="v", nrow=3,ncol=3, rel_heights = c(1, 1, .15))
-plot_grid(sixplots, dilegend, nrow=2,ncol=1, rel_heights = c(1, .2), scale = 0.95)
+png(filename=outfilename, width=57, height=40, units="cm",res=300)
+sixplots <-plot_grid(ylabelA,plots[[1]],plots[[2]],plots[[3]],
+                     ylabelB,plots[[4]],plots[[5]],plots[[6]],
+                     NULL,labels, labels, labels, 
+                     align="v", nrow=3,ncol=4, rel_widths = c(.02,1,1,1), rel_heights=c(1,1,.15))
+
+plot_grid(sixplots, dilegend, nrow=2,ncol=1, rel_heights = c(1, .15), scale = 0.95)
 dev.off()
