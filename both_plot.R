@@ -5,7 +5,10 @@ library(plyr)
 library(tools)
 library(gridExtra)
 library(cowplot)
+library(gdata)
+library(dplyr)
 
+# should contain fw/ di/ and (not obliged) labels.csv
 maindirectory<-"/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10-KOs/"
 fwcsvpath=paste(maindirectory, "/fw/", sep="")
 fwfiles <- list.files(path=fwcsvpath, pattern="*.csv", full.names=T, recursive=FALSE)
@@ -36,7 +39,11 @@ for (filepath in fwfiles){
   #in the txt file, no '-' characters may be present.
   mydata=read.csv(filepath, header=FALSE)
   mydata$V1 <- gsub('-', '_', mydata$V1)
-  data = dcast(melt(mydata, id.vars = "V1"), variable ~ V1)
+  #mydata$order <- seq(from=1, to=length(mydata$V1))
+  melteddata <- melt(mydata, na.rm = FALSE, value.name="freshweight", variable.name="replicate", id.vars = "V1")
+  #make sure the original order is retained..
+  melteddata$V1 <- factor(melteddata$V1, as.character(unique(mydata$V1))) 
+  data=dcast(melteddata, replicate ~ V1)
   data=data[,-1]
   
   stats<-data.frame(
@@ -47,7 +54,12 @@ for (filepath in fwfiles){
   )
   stats$sem=stats$sd/sqrt(stats$n)
   stats$cumulativelen=stats$mean+stats$sem
+  #retain plotting order of input:
+  stats$treatment <- factor(stats$treatment, levels=stats$treatment)
+  #data$treatment <- factor(data$treatment)
   longest_element_w_sembar=max(stats$cumulativelen)
+  
+  
   
   y_major_break_labels=2; y_minor_break_labels=.5
   #if (longest_element_w_sembar>10){y_major_break_labels=5; y_minor_break_labels=1
@@ -55,20 +67,24 @@ for (filepath in fwfiles){
   #} else{y_major_break_labels=1; y_minor_break_labels=.5
   #}
   
-  melteddata <- melt(data, na.rm = FALSE, value.name="freshweight", variable.name="treatment")
-  aov_out<-aov(freshweight ~ treatment, data=melteddata)
+  #meltedfwdata <- melt(data, na.rm = FALSE, value.name="freshweight", variable.name="treatment", id.vars=colnames(data))
+  #meltedfwdata$treatment <- factor(meltedfwdata$treatment, as.character(unique(mydata$V1)))
+  melteddata$V1 <- factor(melteddata$V1)
+  aov_out<-aov(data=melteddata, freshweight ~ V1)
   thsd <- TukeyHSD(aov_out, ordered = FALSE, conf.level = 0.95)
   
   # Extract labels and factor levels from Tukey post-hoc 
-  Tukey.levels <- thsd$treatment[,4]
+  Tukey.levels <- thsd$V1[,4]
   Tukey.labels <- multcompLetters(Tukey.levels)['Letters']
   plot.labels <- names(Tukey.labels$Letters)
   # Create a data frame out of the factor levels and Tukey's homogenous group letters
   plot.levels <- data.frame(plot.labels, labels = Tukey.labels$Letters,stringsAsFactors = FALSE)
-  plot.levels.by_treatment <- plot.levels[order(plot.levels[,1], plot.levels[,2]), ]
-  plot.levels.by_treatment$sem=stats$sem
-  plot.levels.by_significance <- plot.levels.by_treatment[order(plot.levels[,2], plot.levels[,1]), ]                         
-  plot.levels.multiplot[[paste(plant,"fw",sep = "")]] <- plot.levels.by_treatment
+  #retain order of labels:
+  plot.levels$plot.labels <- reorder.factor(plot.levels$plot.labels, new.order=stats$treatment)
+  plot.levels <- plot.levels %>% arrange(plot.labels)
+  
+  plot.levels$sem <- stats$sem                
+  plot.levels.multiplot[[paste(plant,"fw",sep = "")]] <- plot.levels
   plot.levels.multiplot <- plot.levels.multiplot
   currentlistofypositions = (stats$cumulativelen+.05*longest_element_w_sembar)
   plot.levels.multiplot[[paste(plant,"fw",sep = "")]]$ypos= currentlistofypositions
@@ -81,7 +97,7 @@ for (filepath in fwfiles){
     scale_y_continuous(limits=c(0,max(stats$cumulativelen)+.1*max(stats$cumulativelen)), expand=c(0, 0), breaks = seq(0,longest_element_w_sembar+.2*longest_element_w_sembar, y_major_break_labels), minor_breaks = seq(0,longest_element_w_sembar+.2*longest_element_w_sembar, y_minor_break_labels)) +
     ggtitle(bquote(atop(.(fw_title), atop(.(fw_subtitle), "")))) + 
     #add significance labels:
-    #geom_text(aes(label=plot.levels.by_treatment[,2]), y=stats$cumulativelen+.05*longest_element_w_sembar,  size=rel(8)) +
+    #geom_text(aes(label=plot.levels[,2]), y=stats$cumulativelen+.05*longest_element_w_sembar,  size=rel(8)) +
     theme(axis.text.x = element_text(angle=45, hjust=1, size = rel(1.8), colour = "black")) +
     theme(axis.text.y = element_text(size = rel(1.8), colour = "black")) +
     theme(axis.title.x = element_text(angle=0, size = rel(1.8), colour = "black")) +
@@ -116,12 +132,17 @@ for (filepath in difiles){
   print(title)
   
   #in the txt file, no '-' characters may be present.
-  mydata=read.csv(filepath, header=FALSE)
-  mydata$V1 <- gsub('-', '_', mydata$V1)
-  didata = dcast(melt(mydata, id.vars = "V1"), variable ~ V1)
+  mydidata=read.csv(filepath, header=FALSE)
+  mydidata$V1 <- gsub('-', '_', mydidata$V1)
+  melteddidata <- melt(mydidata, id.vars = "V1")
+  #make sure the original order is retained..
+  melteddidata$V1 <- factor(melteddidata$V1, as.character(unique(mydidata$V1))) 
+  didata = dcast(melteddidata, variable ~ V1)
   didata=didata[,-1]
+
   
-  stats<-data.frame(
+  
+  distats<-data.frame(
     treatment=colnames(didata),
     DI0=apply(didata,2, function(x) length(which(x==0))),
     DI1=apply(didata,2, function(x) length(which(x==1))),
@@ -130,10 +151,12 @@ for (filepath in difiles){
     DI4=apply(didata,2, function(x) length(which(x==4)))
   )
   
-  melted_stats <- melt(stats)
+  #melteddidata$V1 <- factor(melteddidata$V1, as.character(unique(mydidata$V1))) 
+  melted_distats <- melt(distats)
+  melted_distats$treatment <- factor(melted_distats$treatment, as.character(unique(mydidata$V1)))
   di_colors <- c("DI0" = "#dbefd9","DI1" = "#f3f0ba","DI2" = "#e58735", "DI3" = "#bd0913", "DI4" = "gray10")
   
-  plots[[paste(plant,"di",sep = "")]] <- ggplot(melted_stats, aes(x=treatment, y=value, fill=variable)) +
+  plots[[paste(plant,"di",sep = "")]] <- ggplot(melted_distats, aes(x=treatment, y=value, fill=variable)) +
     geom_bar(stat = "identity",colour="black", size=1, width=.8) +
     scale_fill_manual(values=di_colors, name="") +
     ylab("number of plants") +
@@ -173,13 +196,18 @@ plots[[4]] <- plots[[4]] + notitlestheme
 plots[[5]] <- plots[[5]] + notitlestheme
 plots[[6]] <- plots[[6]] + notitlestheme
 
-labels <- ggplot(melted_stats, aes(x=treatment, fill=variable)) +
+labels <- ggplot(melted_distats, aes(x=treatment, fill=variable)) +
   xlab(NULL)+
-  scale_x_discrete(limits=plot.levels.multiplot[[1]][[1]])+
-  theme(axis.text.x = element_text(angle=45, hjust=1,vjust=.9, size = rel(1.8), colour = "black"))+
+  theme(axis.text.x = element_text(angle=45, hjust=1,vjust=.8, size = rel(1.8), colour = "black"))+
   theme(axis.line.x=element_blank(), axis.ticks.x=element_blank())
 
-dilegend <- get_legend(plots[[4]] + theme(legend.position="bottom", legend.text=element_text(size=rel(1.8))) + element_rect(size = 10))
+if (file.exists(paste(maindirectory,"labels.csv",sep=""))){
+  customlabels <- read.csv(paste(maindirectory,"labels.csv",sep=""), header=FALSE)
+  #labels <- labels + scale_x_discrete(labels=c("A", "B", "C", "D","E","A", "B", "C", "D","E"))
+  labels <- labels + scale_x_discrete(labels=as.character(t(customlabels[1,])))
+}
+
+dilegend <- get_legend(plots[[4]] + theme(legend.position="bottom", legend.text=element_text(size=rel(1.8))))
 
 png(filename=outfilename, width=60, height=40, units="cm",res=300)
 sixplots <-plot_grid(plots[[1]],plots[[2]],plots[[3]],plots[[4]],plots[[5]],plots[[6]],labels, labels, labels, align="v", nrow=3,ncol=3, rel_heights = c(1, 1, .15))
