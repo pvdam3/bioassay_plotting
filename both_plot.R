@@ -9,7 +9,7 @@ library(gdata)
 library(dplyr)
 
 # should contain fw/ di/ and (not obliged) labels.csv
-maindirectory<-"/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10-KOs/"
+maindirectory<-"/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10-HCT/"
 fwcsvpath=paste(maindirectory, "/fw/", sep="")
 fwfiles <- list.files(path=fwcsvpath, pattern="*.csv", full.names=T, recursive=FALSE)
 dicsvpath=paste(maindirectory, "/di/", sep="")
@@ -59,8 +59,6 @@ for (filepath in fwfiles){
   #data$treatment <- factor(data$treatment)
   longest_element_w_sembar=max(stats$cumulativelen)
   
-  
-  
   y_major_break_labels=2; y_minor_break_labels=.5
   #if (longest_element_w_sembar>10){y_major_break_labels=5; y_minor_break_labels=1
   #} else if (longest_element_w_sembar>4){y_major_break_labels=1; y_minor_break_labels=.5
@@ -87,7 +85,7 @@ for (filepath in fwfiles){
   plot.levels.multiplot[[paste(plant,"fw",sep = "")]] <- plot.levels
   plot.levels.multiplot <- plot.levels.multiplot
   currentlistofypositions = (stats$cumulativelen+.05*longest_element_w_sembar)
-  plot.levels.multiplot[[paste(plant,"fw",sep = "")]]$ypos= currentlistofypositions
+  plot.levels.multiplot[[paste(plant,"fw",sep ="")]]$ypos= currentlistofypositions
   
   plots[[paste(plant,"fw",sep = "")]] <- ggplot(stats, aes(x = treatment, y = mean)) +
     geom_bar(position=position_dodge(), stat="identity", fill=graphcolor, colour="black", size=1, width=.8) + 
@@ -126,7 +124,7 @@ for (filepath in difiles){
   } else if (filename_split[1] == "tom") {plant="tomato"; graphcolor="red"
   }
   
-  outfilename <- paste(outfilename,plant,sep="_")
+  outfilename <- paste(outfilename,plant,sep="_di")
   title=paste("Disease indexes of",plant,"plants")
   subtitle=paste(filename_split[2]," C; 10^", filename_split[3], " sp/ml; ", filename_split[4], sep="")
   print(title)
@@ -158,7 +156,7 @@ for (filepath in difiles){
   
   plots[[paste(plant,"di",sep = "")]] <- ggplot(melted_distats, aes(x=treatment, y=value, fill=variable)) +
     geom_bar(stat = "identity",colour="black", size=1, width=.8) +
-    scale_fill_manual(values=di_colors, name="") +
+    scale_fill_manual(values=di_colors, name="", labels=c("DI0   ","DI1   ","DI2   ","DI3   ","DI4   ")) +
     ylab("number of plants") +
     xlab(NULL)+
     ggtitle(bquote(atop(.(title), atop(.(subtitle), "")))) +
@@ -175,6 +173,7 @@ for (filepath in difiles){
     theme(panel.grid.minor.y = element_blank()) +
     theme(panel.background = element_rect(fill="gray96")) +
     theme(legend.text = element_text(size=rel(1.5))) +
+    theme(legend.key.size = unit(1, "cm")) +
     theme(legend.position="top") +
     theme(plot.margin = unit(c(0.5,0.5,0.5,1.5), "cm"))
     background_grid(major = "y", minor = "none")
@@ -192,9 +191,9 @@ notitlestheme <- theme(axis.title.y = element_blank(), axis.text.x=element_blank
 plots[[1]] <- plots[[1]] + notitlestheme + background_grid(major = "xy", minor = "none")+geom_text(aes(label=plot.levels.multiplot[[1]][[2]]), y=plot.levels.multiplot[[1]][[4]],size=rel(8))
 plots[[2]] <- plots[[2]] + notitlestheme + background_grid(major = "xy", minor = "none")+geom_text(aes(label=plot.levels.multiplot[[2]][[2]]), y=plot.levels.multiplot[[2]][[4]],size=rel(8))
 plots[[3]] <- plots[[3]] + notitlestheme + background_grid(major = "xy", minor = "none")+geom_text(aes(label=plot.levels.multiplot[[3]][[2]]), y=plot.levels.multiplot[[3]][[4]],size=rel(8))
-plots[[4]] <- plots[[4]] + notitlestheme
-plots[[5]] <- plots[[5]] + notitlestheme
-plots[[6]] <- plots[[6]] + notitlestheme
+plots[[4]] <- plots[[4]] + notitlestheme + background_grid(major = "xy", minor = "none")
+plots[[5]] <- plots[[5]] + notitlestheme + background_grid(major = "xy", minor = "none")
+plots[[6]] <- plots[[6]] + notitlestheme + background_grid(major = "xy", minor = "none")
 
 labels <- ggplot(melted_distats, aes(x=treatment, fill=variable)) +
   xlab(NULL)+
@@ -209,7 +208,7 @@ if (file.exists(paste(maindirectory,"labels.csv",sep=""))){
 
 dilegend <- get_legend(plots[[4]] + theme(legend.position="bottom", legend.text=element_text(size=rel(1.8))))
 
-png(filename=outfilename, width=60, height=40, units="cm",res=300)
+png(filename=outfilename, width=60, height=45, units="cm",res=300)
 sixplots <-plot_grid(plots[[1]],plots[[2]],plots[[3]],plots[[4]],plots[[5]],plots[[6]],labels, labels, labels, align="v", nrow=3,ncol=3, rel_heights = c(1, 1, .15))
-plot_grid(sixplots, dilegend, nrow=2,ncol=1, rel_heights = c(1, .1), scale = 0.95)
+plot_grid(sixplots, dilegend, nrow=2,ncol=1, rel_heights = c(1, .2), scale = 0.95)
 dev.off()
