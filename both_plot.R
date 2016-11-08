@@ -6,13 +6,14 @@ library(tools)
 library(gridExtra)
 library(cowplot)
 
-maindirectory<-"/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10-HCT/"
+maindirectory<-"/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10-KOs/"
 fwcsvpath=paste(maindirectory, "/fw/", sep="")
 fwfiles <- list.files(path=fwcsvpath, pattern="*.csv", full.names=T, recursive=FALSE)
 dicsvpath=paste(maindirectory, "/di/", sep="")
 difiles <- list.files(path=dicsvpath, pattern="*.csv", full.names=T, recursive=FALSE)
 
 plots <- list()
+plot.levels.multiplot <- list()
 outfilename <- maindirectory
 
 for (filepath in fwfiles){
@@ -67,6 +68,10 @@ for (filepath in fwfiles){
   plot.levels.by_treatment <- plot.levels[order(plot.levels[,1], plot.levels[,2]), ]
   plot.levels.by_treatment$sem=stats$sem
   plot.levels.by_significance <- plot.levels.by_treatment[order(plot.levels[,2], plot.levels[,1]), ]                         
+  plot.levels.multiplot[[paste(plant,"fw",sep = "")]] <- plot.levels.by_treatment
+  plot.levels.multiplot <- plot.levels.multiplot
+  currentlistofypositions = (stats$cumulativelen+.05*longest_element_w_sembar)
+  plot.levels.multiplot[[paste(plant,"fw",sep = "")]]$ypos= currentlistofypositions
   
   plots[[paste(plant,"fw",sep = "")]] <- ggplot(stats, aes(x = treatment, y = mean)) +
     geom_bar(position=position_dodge(), stat="identity", fill=graphcolor, colour="black", size=1, width=.8) + 
@@ -76,7 +81,7 @@ for (filepath in fwfiles){
     scale_y_continuous(limits=c(0,max(stats$cumulativelen)+.1*max(stats$cumulativelen)), expand=c(0, 0), breaks = seq(0,longest_element_w_sembar+.2*longest_element_w_sembar, y_major_break_labels), minor_breaks = seq(0,longest_element_w_sembar+.2*longest_element_w_sembar, y_minor_break_labels)) +
     ggtitle(bquote(atop(.(fw_title), atop(.(fw_subtitle), "")))) + 
     #add significance labels:
-    geom_text(aes(label=plot.levels.by_treatment[,2]), y=stats$cumulativelen+.05*longest_element_w_sembar,  size=rel(8)) +
+    #geom_text(aes(label=plot.levels.by_treatment[,2]), y=stats$cumulativelen+.05*longest_element_w_sembar,  size=rel(8)) +
     theme(axis.text.x = element_text(angle=45, hjust=1, size = rel(1.8), colour = "black")) +
     theme(axis.text.y = element_text(size = rel(1.8), colour = "black")) +
     theme(axis.title.x = element_text(angle=0, size = rel(1.8), colour = "black")) +
@@ -157,12 +162,15 @@ outfilename <- paste(outfilename,"png",sep=".")
 
 notitlestheme <- theme(axis.title.y = element_blank(), axis.text.x=element_blank())+
   theme(plot.title=element_blank(), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))+
-  theme(legend.text=element_blank(), legend.position="none")+
-  background_grid(major = "y", minor = "none")
+  theme(legend.text=element_blank(), legend.position="none")
+ 
+  
 
-plots[[1]] <- plots[[1]] + notitlestheme
-plots[[2]] <- plots[[2]] + notitlestheme
-plots[[3]] <- plots[[3]] + notitlestheme
+
+
+plots[[1]] <- plots[[1]] + notitlestheme + background_grid(major = "xy", minor = "none")+geom_text(aes(label=plot.levels.multiplot[[1]][[2]]), y=plot.levels.multiplot[[1]][[4]],size=rel(8))
+plots[[2]] <- plots[[2]] + notitlestheme + background_grid(major = "xy", minor = "none")+geom_text(aes(label=plot.levels.multiplot[[2]][[2]]), y=plot.levels.multiplot[[2]][[4]],size=rel(8))
+plots[[3]] <- plots[[3]] + notitlestheme + background_grid(major = "xy", minor = "none")+geom_text(aes(label=plot.levels.multiplot[[3]][[2]]), y=plot.levels.multiplot[[3]][[4]],size=rel(8))
 plots[[4]] <- plots[[4]] + notitlestheme
 plots[[5]] <- plots[[5]] + notitlestheme
 plots[[6]] <- plots[[6]] + notitlestheme
