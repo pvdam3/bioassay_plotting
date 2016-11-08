@@ -13,12 +13,12 @@ The script will plot a 3x2 grid containing a row of freshweight average measurem
 ##Dependencies
 Due to many workarounds of formatting the data like we want for plotting, we need the following R libraries installed and imported:
 
--library(ggplot2)
--library(reshape2)
--library(multcompView)
--library(plyr)
--library(tools)
--library(gridExtra)
--library(cowplot)
--library(gdata)
--library(dplyr)
+- library(ggplot2)
+- library(reshape2)
+- library(multcompView)
+- library(plyr)
+- library(tools)
+- library(gridExtra)
+- library(cowplot)
+- library(gdata)
+- library(dplyr)
