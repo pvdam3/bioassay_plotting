@@ -1,8 +1,8 @@
 # R plotting of bioassay data
 This R script will take in a set of bioassay measurements in CSV format.
 
-##Main folder
-provide a main folder which contains 
+##Main directory
+provide a main directory which contains:
 
 1. /fw/ (csv files containing fresh weight measurements)
 2. /di/ (csv files containing disease index measurements from 0-4)
@@ -22,3 +22,6 @@ Due to many workarounds of formatting the data like we want for plotting, we nee
 - library(cowplot)
 - library(gdata)
 - library(dplyr)
+
+##Sample output
+A sample output can be found here: [sample_output.png](sample_output.png)
