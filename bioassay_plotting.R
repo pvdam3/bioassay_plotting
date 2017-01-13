@@ -9,8 +9,8 @@ library(gdata)
 library(dplyr)
 
 #### should contain fw/ di/ and (not obliged) labels.csv
-maindirectory<-"/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10-HCT/"
-####
+maindirectory<-"/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10-HCT_wo_181/"
+#### add a '/' at the end
 
 fwcsvpath=paste(maindirectory, "/fw/", sep="")
 fwfiles <- list.files(path=fwcsvpath, pattern="*.csv", full.names=T, recursive=FALSE)
@@ -22,7 +22,6 @@ plot.levels.multiplot <- list()
 outfilename <- maindirectory
 
 for (filepath in fwfiles){
-  #filepath='/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10_1-8/mel_21_7_2wpi.csv'
   filename<-basename(filepath)
   filename_split<-unlist(strsplit(file_path_sans_ext(filename), "_"))
   graphcolor="gray50"
@@ -61,11 +60,11 @@ for (filepath in fwfiles){
   #data$treatment <- factor(data$treatment)
   longest_element_w_sembar=max(stats$cumulativelen)
   
-  y_major_break_labels=2; y_minor_break_labels=.5
-  #if (longest_element_w_sembar>10){y_major_break_labels=5; y_minor_break_labels=1
-  #} else if (longest_element_w_sembar>4){y_major_break_labels=1; y_minor_break_labels=.5
-  #} else{y_major_break_labels=1; y_minor_break_labels=.5
-  #}
+  #y_major_break_labels=2; y_minor_break_labels=.5
+  if (longest_element_w_sembar>20){y_major_break_labels=5; y_minor_break_labels=2.5
+  } else if (longest_element_w_sembar>2.5) {y_major_break_labels=2; y_minor_break_labels=.5
+  } else {y_major_break_labels=1; y_minor_break_labels=.5
+  }
   
   #meltedfwdata <- melt(data, na.rm = FALSE, value.name="freshweight", variable.name="treatment", id.vars=colnames(data))
   #meltedfwdata$treatment <- factor(meltedfwdata$treatment, as.character(unique(mydata$V1)))
@@ -108,11 +107,21 @@ for (filepath in fwfiles){
     theme(panel.grid.minor.x = element_blank()) +
     theme(panel.grid.major.y = element_line(color="gray70", size=0.5)) +
     theme(panel.grid.minor.y = element_line(colour="gray87", size=0.5)) +
-    theme(panel.background = element_rect(fill="gray96")) +
+    theme(panel.background = element_rect(fill="#f0f0f0")) +
     theme(plot.margin = unit(c(0.5,0.5,0.5,1.5), "cm")) +
     background_grid(major = "y", minor = "y")
   ggsave(paste(file_path_sans_ext(filepath),".png",sep=""), width=30, height=30, units="cm",dpi=300)
 }
+
+emptyplot <- ggplot(data.frame()) + geom_point() + xlim(0, 10) + ylim(0, 100)+
+  theme(axis.text = element_blank())+
+  theme(axis.line = element_blank())+
+  theme(panel.grid.major= element_blank())+
+  theme(panel.background = element_blank())
+#fill empty space in multiplot with empty plots:
+if (length(fwfiles)==2){plots[[3]] <-emptyplot
+} else if (length(fwfiles)==1) {plots[[2]] <-emptyplot; plots[[3]] <-emptyplot}
+
 
 for (filepath in difiles){
   #filepath='/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-10_1-8/di/cuc_21_7_2wpi.csv'
@@ -174,7 +183,7 @@ for (filepath in difiles){
     theme(panel.grid.minor.x = element_blank()) +
     theme(panel.grid.major.y = element_line(colour="gray70", size=0.5)) +
     theme(panel.grid.minor.y = element_blank()) +
-    theme(panel.background = element_rect(fill="gray96")) +
+    theme(panel.background = element_rect(fill="#f0f0f0")) +
     theme(legend.text = element_text(size=rel(1.5))) +
     theme(legend.key.size = unit(1, "cm")) +
     theme(legend.position="top") +
@@ -183,7 +192,9 @@ for (filepath in difiles){
   ggsave(paste(file_path_sans_ext(filepath),".png",sep=""), width=30, height=30, units="cm",dpi=300)
 }
 
-outfilename <- paste(outfilename,"png",sep=".")
+#fill empty space in multiplot with empty plots:
+if (length(difiles)==2){plots[[6]] <-emptyplot
+} else if (length(difiles)==1) {plots[[5]] <-emptyplot; plots[[6]] <-emptyplot}
 
 notitlestheme <- theme(axis.title.y = element_blank(), axis.text.x=element_blank())+background_grid(major = "xy", minor = "none")+
   theme(plot.title=element_blank(), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))+
@@ -201,24 +212,28 @@ labels <- ggplot(melted_distats, aes(x=treatment, fill=variable)) +
   theme(axis.text.x = element_text(angle=45, hjust=1,vjust=.8, size = rel(1.8), colour = "black"))+
   theme(axis.line.x=element_blank(), axis.ticks.x=element_blank())
 
-ylabelA <- ggplot(melted_distats, aes(y=value, fill=variable))+ylab(label="fresh weight (g)")+
-  theme(axis.line.y=element_blank(), axis.ticks.y=element_blank(), axis.text=element_blank(), axis.title.y=element_text(size=rel(1.8)))
-ylabelB <- ggplot(stats, aes(y = mean))+ylab(label="number of plants")+
-  theme(axis.line.y=element_blank(), axis.ticks.y=element_blank(), axis.text=element_blank(), axis.title.y=element_text(size=rel(1.8)))
+ylabelA <- ggplot(melted_distats, aes(y=value, fill=variable))+ylab(label="Fresh weight (g)")+
+  theme(axis.line.y=element_blank(), axis.ticks.y=element_blank(), axis.text=element_blank(), axis.title.y=element_text(size=rel(1.8), margin=margin(0,-20,0,0)))
+ylabelB <- ggplot(stats, aes(y = mean))+ylab(label="Number of plants")+
+  theme(axis.line.y=element_blank(), axis.ticks.y=element_blank(), axis.text=element_blank(), axis.title.y=element_text(size=rel(1.8), margin=margin(0,-20,0,0)))
 
 if (file.exists(paste(maindirectory,"labels.csv",sep=""))){
-  customlabels <- read.csv(paste(maindirectory,"labels.csv",sep=""), header=FALSE)
-  #labels <- labels + scale_x_discrete(labels=c("A", "B", "C", "D","E","A", "B", "C", "D","E"))
-  labels <- labels + scale_x_discrete(labels=as.character(t(customlabels[1,])))
-}
+  customlabels <- read.csv(paste(maindirectory,"labels.csv",sep=""), header=FALSE)}
+  #labels <- labels + scale_x_discrete(labels=as.character(t(customlabels[1,]))) }
+
+#labels <- labels + scale_x_discrete(labels=c(expression(Delta*"SIX6#30"), expression(Delta*"SIX6#40"), expression(Delta*"SIX6#46"), expression("SIX6 ect. #10"), expression(Delta*"SIX9#97"),expression("SIX9 ect. #391"), expression(Delta*"metallopr. #44"), expression("metallopr. ect. #25"), "wt", "mock"))
+labels <- labels + scale_x_discrete(labels=c("HCT#2","HCT#4","HCT#8","HCT#9","Fo47-pGRB",expression("Forc016"*Delta*"SIX6#46"), "mock"))
 
 dilegend <- get_legend(plots[[4]] + theme(legend.position="bottom", legend.text=element_text(size=rel(1.8))))
-
-png(filename=outfilename, width=57, height=40, units="cm",res=300)
 sixplots <-plot_grid(ylabelA,plots[[1]],plots[[2]],plots[[3]],
                      ylabelB,plots[[4]],plots[[5]],plots[[6]],
                      NULL,labels, labels, labels, 
-                     align="v", nrow=3,ncol=4, rel_widths = c(.02,1,1,1), rel_heights=c(1,1,.15))
+                     align="v", nrow=3,ncol=4, rel_widths = c(.02,1,1,1), rel_heights=c(1,1,.25), 
+                     labels = c("","A","B","C"), label_size = 22)
 
+svg(filename=paste(outfilename,"svg",sep="."), width=19.05, height=14.2875, family="arial")
+plot_grid(sixplots, dilegend, nrow=2,ncol=1, rel_heights = c(1, .15), scale = 0.95)
+dev.off()
+png(filename=paste(outfilename,"png",sep="."), width=40, height=30, family="arial", unit="cm", res=300)
 plot_grid(sixplots, dilegend, nrow=2,ncol=1, rel_heights = c(1, .15), scale = 0.95)
 dev.off()
