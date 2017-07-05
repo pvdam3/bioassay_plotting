@@ -9,7 +9,7 @@ library(gdata)
 library(dplyr)
 
 #### should contain fw/ di/ and (not obliged) labels.csv
-maindirectory<-"/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-12-results_2wpi_21c_dSGE1_FORC/"
+maindirectory<-"/Users/Peter/Programming/R/FW_plot_and_anova/data/2016-12-results_2wpi_21c_dSGE1/"
 #### add a '/' at the end
 
 fwcsvpath=paste(maindirectory, "/fw/", sep="")
@@ -89,12 +89,12 @@ for (filepath in fwfiles){
   currentlistofypositions = (stats$cumulativelen+.05*longest_element_w_sembar)
   plot.levels.multiplot[[paste(plant,"fw",sep ="")]]$ypos= currentlistofypositions
   
-  plots[[paste(plant,"fw",sep = "")]] <- ggplot(stats, aes(x = treatment, y = mean)) +
-    geom_bar(position=position_dodge(), stat="identity", fill=graphcolor, colour="black", size=1, width=.8) + 
-    geom_errorbar(aes(ymin=mean-sem, ymax=mean+sem), width=.2,  size=.8, position=position_dodge(.9), colour="black") +
-  #plots[[paste(plant,"fw",sep = "")]] <- ggplot(melteddata, aes(V1, freshweight)) +
-    #geom_boxplot(fill=graphcolor, colour="black", size=1, width=.8) +  ## , outlier.shape = NA
-    #geom_jitter(width = 0) +
+  #plots[[paste(plant,"fw",sep = "")]] <- ggplot(stats, aes(x = treatment, y = mean)) +
+    #geom_bar(position=position_dodge(), stat="identity", fill=graphcolor, colour="black", size=1, width=.8) + 
+    #geom_errorbar(aes(ymin=mean-sem, ymax=mean+sem), width=.2,  size=.8, position=position_dodge(.9), colour="black") +
+  plots[[paste(plant,"fw",sep = "")]] <- ggplot(melteddata, aes(V1, freshweight)) +
+    geom_boxplot(fill=graphcolor, colour="black", size=1, width=.8) +  ## , outlier.shape = NA
+    geom_jitter(width = 0) +
     ylab("Fresh weight (g)") +
     xlab(NULL)+
     # used to be .1*max(blabla) for barplots
@@ -205,9 +205,9 @@ notitlestheme <- theme(axis.title.y = element_blank(), axis.text.x=element_blank
   theme(plot.title=element_blank(), plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm"))+
   theme(legend.text=element_blank(), legend.position="none")
  
-plots[[1]] <- plots[[1]] + notitlestheme +geom_text(aes(label=plot.levels.multiplot[[1]][[2]]), y=plot.levels.multiplot[[1]][[4]],size=rel(8))
-plots[[2]] <- plots[[2]] + notitlestheme +geom_text(aes(label=plot.levels.multiplot[[2]][[2]]), y=plot.levels.multiplot[[2]][[4]],size=rel(8))
-plots[[3]] <- plots[[3]] + notitlestheme +geom_text(aes(label=plot.levels.multiplot[[3]][[2]]), y=plot.levels.multiplot[[3]][[4]],size=rel(8))
+plots[[1]] <- plots[[1]] + notitlestheme #+geom_text(aes(label=plot.levels.multiplot[[1]][[2]]), y=plot.levels.multiplot[[1]][[4]],size=rel(8))
+plots[[2]] <- plots[[2]] + notitlestheme #+geom_text(aes(label=plot.levels.multiplot[[2]][[2]]), y=plot.levels.multiplot[[2]][[4]],size=rel(8))
+plots[[3]] <- plots[[3]] + notitlestheme #+geom_text(aes(label=plot.levels.multiplot[[3]][[2]]), y=plot.levels.multiplot[[3]][[4]],size=rel(8))
 plots[[4]] <- plots[[4]] + notitlestheme 
 plots[[5]] <- plots[[5]] + notitlestheme
 plots[[6]] <- plots[[6]] + notitlestheme
@@ -229,24 +229,27 @@ if (file.exists(paste(maindirectory,"labels.csv",sep=""))){
 #labels <- emptylabels + scale_x_discrete(labels=c(expression(Delta*"SIX6 #30"), expression(Delta*"SIX6 #40"), expression(Delta*"SIX6 #46"), expression("SIX6 ect. #10"), expression(Delta*"SIX9 #97"),expression("SIX9 ect. #391"), expression(Delta*"SMP1 #44"), expression("SMP1 ect. #25"), "wt", "mock"))
 #labels <- labels + scale_x_discrete(labels=c("HCT #2","HCT #4","HCT #8","HCT #9","Fo47-pGRB1",expression("Forc016"*Delta*"SIX6 #46"), "mock"))
 #labels <- labels + scale_x_discrete(labels=c("chr loss #1","chr loss #2","chr loss #3","chr loss #4","chr loss #5",expression("Forc016"*Delta*"SIX9 #97","mock")))
-labels <- emptylabels + scale_x_discrete(labels=c("","","","","","","","",""))
 
 
 empty_category_letters <- ggplot(melted_distats, aes(x=treatment, fill=variable)) +
   xlab(NULL)+
   theme(axis.text.x = element_text(size = rel(1.2), colour = "black"))+
   theme(axis.line.x=element_blank(), axis.ticks.x=element_blank()) 
+category_letters_A <- empty_category_letters + scale_x_discrete(labels=plot.levels.multiplot[[1]][[2]])
+category_letters_B <- empty_category_letters + scale_x_discrete(labels=plot.levels.multiplot[[2]][[2]])
+category_letters_C <- empty_category_letters + scale_x_discrete(labels=plot.levels.multiplot[[3]][[2]])
 
 dilegend <- get_legend(plots[[4]] + theme(legend.position="bottom", legend.text=element_text(size=rel(1.8))))
-sixplots <-plot_grid(ylabelA,plots[[1]],plots[[2]],plots[[3]],
+sixplots <-plot_grid(NULL,category_letters_A,category_letters_B,category_letters_C,
+                     ylabelA,plots[[1]],plots[[2]],plots[[3]],
                      ylabelB,plots[[4]],plots[[5]],plots[[6]],
                      NULL,labels, labels, labels, 
-                     align="v", nrow=3,ncol=4, rel_widths = c(.02,1,1,1), rel_heights=c(1,1,.25), 
+                     align="v", nrow=4,ncol=4, rel_widths = c(.02,1,1,1), rel_heights=c(.1,1,1,.25), 
                      labels = c("","A","B","C"), label_size = 22)
 
-svg(filename=paste(outfilename,"svg",sep="."), width=19.05, height=14.2875, family="arial")
-plot_grid(sixplots, dilegend, nrow=2,ncol=1, rel_heights = c(1, .15), scale = 0.95)
-dev.off()
+#svg(filename=paste(outfilename,"svg",sep="."), width=19.05, height=14.2875, family="arial")
+#plot_grid(sixplots, dilegend, nrow=2,ncol=1, rel_heights = c(1, .15), scale = 0.95)
+#dev.off()
 png(filename=paste(outfilename,"png",sep="."), width=40, height=30, family="arial", unit="cm", res=300)
 plot_grid(sixplots, dilegend, nrow=2,ncol=1, rel_heights = c(1, .15), scale = 0.95)
 dev.off()
